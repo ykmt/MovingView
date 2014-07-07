@@ -54,9 +54,13 @@
 - (void)openMenuDrawerWithAnimation:(BOOL)animation
 {
     void (^animations)() = ^(){
-        CGFloat x = CGRectGetWidth(self.movingContainer.frame)+CENTER_OFFSET;
+        CGFloat x = CGRectGetWidth(self.movingContainer.frame) + DRAWER_OFFSET;
         CGPoint center = CGPointMake(x, self.movingContainer.center.y);
         self.movingContainer.center = center;
+
+        CGRect frame = self.menuDrawerContainer.frame;
+        frame.origin.x = 0.0;
+        self.menuDrawerContainer.frame = frame;
     };
     
     void (^completion)(BOOL) = ^(BOOL finished) {
@@ -136,6 +140,10 @@
         CGFloat x = CGRectGetWidth(self.movingContainer.bounds)/2.0;
         CGPoint center = CGPointMake(x, self.movingContainer.center.y);
         self.movingContainer.center = center;
+        
+        CGRect frame = self.menuDrawerContainer.frame;
+        frame.origin.x = -DRAWER_OFFSET;
+        self.menuDrawerContainer.frame = frame;
     };
     
     void (^completionBlock)(BOOL) = ^(BOOL finished) {
@@ -252,8 +260,8 @@
     
     CGFloat movingX = self.movingContainer.center.x + point.x;
     
-    const CGFloat MOVING_X_MIN = - CENTER_OFFSET;
-    const CGFloat MOVING_X_MAX = CGRectGetWidth(self.movingContainer.frame) + CENTER_OFFSET;
+    const CGFloat MOVING_X_MIN = - DRAWER_OFFSET;
+    const CGFloat MOVING_X_MAX = CGRectGetWidth(self.movingContainer.frame) + DRAWER_OFFSET;
     const CGFloat CONTAINER_CENTER_X = CGRectGetWidth(self.movingContainer.frame) / 2.0;
     
     if (!_drawerAnimating && movingX >= MOVING_X_MIN && movingX <= MOVING_X_MAX)
@@ -279,10 +287,18 @@
             _blockPanningRight = YES;
         }
         
+        
         CGPoint moveTo = CGPointMake(movingX, self.movingContainer.center.y);
         self.movingContainer.center = moveTo;
         [self.movingContainer layoutSubviews];
-    }
+        
+
+        CGFloat h = (DRAWER_OFFSET / (CGRectGetWidth(self.movingContainer.bounds) - DRAWER_OFFSET));
+        CGFloat moving = h * point.x + self.menuDrawerContainer.center.x;
+        CGPoint move = CGPointMake(moving, self.menuDrawerContainer.center.y);
+        self.menuDrawerContainer.center = move;
+        [self.menuDrawerContainer layoutSubviews];
+}
 }
 
 - (void)p_endMovingAtPoint:(CGPoint)point withVelocity:(CGPoint)velocity
@@ -353,12 +369,23 @@
     _shopDrawerOpenable = YES;
     _isMenuDrawerOpen = NO;
     _isShopDrawerOpen = NO;
+    
+    CGRect menuDrawerContainerRect = _menuDrawerContainer.frame;
+    menuDrawerContainerRect.origin.x = -DRAWER_OFFSET;
+    _menuDrawerContainer.frame = menuDrawerContainerRect;
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+- (void)viewDidLayoutSubviews
+{
+    [super viewDidLayoutSubviews];
+    
+    [self.view layoutSubviews];
 }
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
